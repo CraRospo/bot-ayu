@@ -29,7 +29,6 @@ async function onMessage(msg, bot) {
     await onWebRoomMessage(msg, bot);
   } else {
     //处理用户消息  用户消息暂时只处理文本消息。后续考虑其他
-    console.log("bot.Message", bot.Message);
     const isText = msg.type() === bot.Message.Type.Text;
     if (isText) {
       await onPeopleMessage(msg, bot);
@@ -44,9 +43,8 @@ async function onPeopleMessage(msg, bot) {
   const contact = msg.talker();
   //对config配置文件中 ignore的用户消息不必处理
   // if (config.IGNORE.includes(contact.payload.name)) return;
-  let content = msg.text().trim(); // 消息内容 使用trim()去除前后空格
-  let record = `${msg.text()}  ${contact} ${dayjs().format('HH:mm:ss')}`
-  insertLog('log', record)
+  let content = `${msg.text().trim()} ${contact.name()}`
+  insertLog({ action: 'Message', content })
 
   if (content === "你好！") {
     await delay(200);

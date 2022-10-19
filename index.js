@@ -4,6 +4,7 @@ const onScan = require("./listener/scan.js");
 const onLogin = require("./listener/login.js");
 const onMessage = require("./listener/message.js");
 const onFriendship = require("./listener/friendship.js");
+const onError = require("./listener/error.js");
 
 const bot = WechatyBuilder.build({
   name: "ayu",
@@ -22,8 +23,11 @@ bot.on("scan", async (qrcode, status) => {
   onScan(qrcode, status);
 });
 bot.on("friendship", async friendship => {
-  onFriendship(friendship);
+  onFriendship(friendship, bot);
 });
+bot.on("error", (error) => {
+  onError(error)
+})
 
 bot
   .start()

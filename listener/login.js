@@ -9,17 +9,14 @@
 // const config = require("../config");
 // const untils = require("../utils");
 // const superagent = require("../superagent");
-const insertLog = require('../utils/log')
+const insertLog = require('../utils/log');
 /**
  * @description 您的机器人上线啦
  * @param {} user
  */
 async function onLogin(user, bot) {
   console.log(`贴心小助理${user}登录了`);
-  //创建定时发送群消息任务
-  // await onRoom(bot);
-
-  insertLog('log', user)
+  insertLog({ action: 'Login', content: user })
 }
 /**
  * 9点定时给指定群发送消息
