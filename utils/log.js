@@ -5,7 +5,7 @@ const fsPromises = fs.promises;
 
 /**
  * 写log
- * @param {String} type 写入log的type 'error' | 'log'
+ * @param {String} type 写入log的type 'err' | 'log'
  * @param {String} action 写入动作
  * @param {String} content 写入的内容
  * @return {Void}
@@ -23,7 +23,6 @@ async function insertLog({
     // check log dir
     await fsPromises.access(dirPath, fs.constants.F_OK)
   } catch {
-    console.log(1)
     await fsPromises.mkdir(dirPath)
   }
 
@@ -31,7 +30,6 @@ async function insertLog({
     // write file
     fsPromises.appendFile(filePath, infomation)
   } catch (error) {
-    console.log(error)
     fsPromises.appendFile(filePath, error)
   }
 }

@@ -10,17 +10,14 @@ const { FileBox } = require("file-box");
 // const superagent = require("../superagent");
 // const config = require("../config");
 const insertLog = require('../utils/log')
+const { handleMessage } = require('../action/message/index')
 
 const allKeywords = `你好！`;
-/**
- * sleep
- * @param {*} ms
- */
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 /**
  * 处理消息
  */
-async function onMessage(msg, bot) {
+async function onMessage(msg, bot, contactSelf) {
   //防止自己和自己对话
   if (msg.self()) return;
   const room = msg.room(); // 是否是群消息
@@ -31,28 +28,26 @@ async function onMessage(msg, bot) {
     //处理用户消息  用户消息暂时只处理文本消息。后续考虑其他
     const isText = msg.type() === bot.Message.Type.Text;
     if (isText) {
-      await onPeopleMessage(msg, bot);
+      await onPeopleMessage(msg, bot, contactSelf);
     }
   }
 }
 /**
  * 处理用户消息
  */
-async function onPeopleMessage(msg, bot) {
+async function onPeopleMessage(msg, bot, contactSelf) {
   //获取发消息人
-  const contact = msg.talker();
+  const contact = msg.talker().name();
+  const message = msg.text().trim()
   //对config配置文件中 ignore的用户消息不必处理
   // if (config.IGNORE.includes(contact.payload.name)) return;
-  let content = `${msg.text().trim()} ${contact.name()}`
+  let content = `<${contact}> ${message}`
   insertLog({ action: 'Message', content })
 
-  if (content === "你好！") {
-    await delay(200);
-    await msg.say('Hi, i m chaty robot, A-YU!');
-  } else {
-    await delay(200);
-    await msg.say('this is a auto message, conversation will save as log!');
-  }
+  
+  handleMessage(message, contact)
+
+
   // else if (content === "打赏") {
   //   //这里换成自己的赞赏二维码
   //   const fileBox = FileBox.fromFile(path.join(__dirname, "../imgs/pay.png"));

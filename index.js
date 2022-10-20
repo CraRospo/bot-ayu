@@ -13,10 +13,16 @@ const bot = WechatyBuilder.build({
     uos: true,
   },
 });
+
+global['ContactSelf'] = null
+global['Message'] = null
+
 bot.on("login", async user => {
+  global['ContactSelf'] = user
   onLogin(user, bot);
 });
 bot.on("message", async msg => {
+  global['Message'] = msg
   onMessage(msg, bot);
 });
 bot.on("scan", async (qrcode, status) => {

@@ -1,3 +1,7 @@
 module.exports = {
-  CONFIRM_MSG: 'AYU'
+  CONFIRM_MSG: 'AYU',
+  HELLO_MSG: 'hi, i m A-YU,a wechat bot.',
+  AUTO_MSG: 'this is a auto message, conversation will save into logs!',
+  BYE_MSG: 'night.have a good dream.',
+  MASTER: ['cra']
 }
