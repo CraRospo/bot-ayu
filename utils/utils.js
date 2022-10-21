@@ -23,7 +23,7 @@ function hasPermission(name) {
  * @returns {Boolean}
  */
 function isCommand(message) {
-  return message.match(/^&amp;.+\s.+/)
+  return message.match(/^&amp;.+/)
 }
 
 /**

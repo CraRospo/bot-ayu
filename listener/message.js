@@ -35,7 +35,7 @@ async function onMessage(msg, bot, contactSelf) {
 /**
  * 处理用户消息
  */
-async function onPeopleMessage(msg, bot, contactSelf) {
+async function onPeopleMessage(msg, bot) {
   //获取发消息人
   const contact = msg.talker().name();
   const message = msg.text().trim()
@@ -43,8 +43,6 @@ async function onPeopleMessage(msg, bot, contactSelf) {
   // if (config.IGNORE.includes(contact.payload.name)) return;
   let content = `<${contact}> ${message}`
   insertLog({ action: 'Message', content })
-
-  
   handleMessage(message, contact)
 
 
@@ -66,36 +64,7 @@ async function onPeopleMessage(msg, bot, contactSelf) {
   //       console.error(e);
   //     }
   //   }
-  // } else if (content === "毒鸡汤" || parseInt(content) === 2) {
-  //   let soup = await superagent.getSoup();
-  //   await delay(200);
-  //   await msg.say(soup);
-  // } else if (content === "神回复" || parseInt(content) === 3) {
-  //   const { title, content } = await superagent.getGodReply();
-  //   await delay(200);
-  //   await msg.say(`标题：${title}<br><br>神回复：${content}`);
-  // } else if (content === "英语一句话" || parseInt(content) === 4) {
-  //   const { en, zh } = await superagent.getEnglishOne();
-  //   await delay(200);
-  //   await msg.say(`en：${en}<br><br>zh：${zh}`);
-  // } else {
-  //   const noUtils = await onUtilsMessage(msg, bot);
-  //   if (noUtils) {
-  //     await delay(200);
-  //     await msg.say(allKeywords);
-  //   }
-  // }
+
 }
-
-/**
- * 处理群消息
- */
-// async function onWebRoomMessage(msg, bot) {
-//   const isText = msg.type() === bot.Message.Type.Text;
-//   if (isText) {
-//     const content = msg.text().trim(); // 消息内容
-
-//   }
-// }
 
 module.exports = onMessage;

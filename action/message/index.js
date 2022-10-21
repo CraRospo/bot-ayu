@@ -9,7 +9,12 @@ const {
   getRandomReplyMsg
 } = require('../../utils/utils')
 
-let CACHE_NUMBER = 0,CACHE_STATUS = false,CACHE_NAME = ''
+let CACHE_NUMBER = 0,
+    CACHE_STATUS = false,
+    CACHE_NAME = '',
+    CACHE_HEAP = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'],
+    CACHE_MEMBER = new Map()
+
 
 /**
  * 处理文字消息的逻辑
@@ -18,6 +23,7 @@ let CACHE_NUMBER = 0,CACHE_STATUS = false,CACHE_NAME = ''
  * @returns {Function}
  */
 function handleMessage(msg, ...args) {
+  if (CACHE_STATUS) return getCommandType(CACHE_NAME, msg)
   if (isCommand(msg)) {
     return handleCommandMessage(msg, ...args)
   } else {
@@ -36,8 +42,6 @@ function handleTextMessage(msg) {
       return replyMessage(HELLO_MSG)
     case '晚安':
       return replyMessage(BYE_MSG)
-    default:
-      return isGaming(msg)
   }
 }
 
@@ -59,12 +63,26 @@ async function handleCommandMessage(msg, ...args) {
     return 
   }
 
+  CACHE_CURRENT_CONTACT = args[0]
+  getCommandType(name, value)
+  
+}
+
+/**
+ * 执行指令
+ * @param {String} name 
+ * @param {String} msg 
+ * @returns {Function}
+ */
+function getCommandType(name, msg) {
   // 指令handle
   switch (name) {
     case '更换名字':
-      return renameBot(value)
+      return renameBot(msg)
     case '猜数字':
-      return guessNumber(value)
+      return guessNumber(msg)
+    case '21点':
+      return twentyOnePoint(msg)
     case '结束':
       return gameStop()
     default:
@@ -72,31 +90,161 @@ async function handleCommandMessage(msg, ...args) {
   }
 }
 
-// 检查是否游戏中
-function isGaming(msg) {
+/**
+ * 猜数字
+ * @param {String} msg 
+ */
+function guessNumber(msg) {
+  // 
   if (CACHE_STATUS) {
     replyMessage(guess(msg))
   } else {
-    replyMessage(AUTO_MSG)
+    const limit = msg || 100
+    const num = Math.ceil(Math.random() * limit)
+    CACHE_NUMBER = num
+    CACHE_STATUS = true
+    CACHE_NAME = '猜数字'
+
+    replyMessage('game start!')
   }
 }
 
-// 初始化猜数字
-function guessNumber(limit) {
-  const num = Math.ceil(Math.random() * limit)
-  CACHE_NUMBER = num
-  CACHE_STATUS = true
 
-  replyMessage('game start!')
-}
-
-// 猜
+/**
+ * 比较number
+ * @param {String} num 
+ * @returns {String} 比较结果
+ */
 function guess(num) {
   const number = Number(num)
   if (Number.isNaN(number)) return getRandomReplyMsg(DICT.UNKNOWN_PARAMS_TEXT)
   if (number === CACHE_NUMBER) return getRandomReplyMsg(DICT.GAME_SUCCESS_TEXT)
-  if (number < CACHE_NUMBER) return replyMessage('小了！')
-  if (number > CACHE_NUMBER) return replyMessage('大了！')
+  if (number < CACHE_NUMBER) return '小了！'
+  if (number > CACHE_NUMBER) return '大了！'
+}
+
+/**
+ * 21点内的 指令解析
+ * @param {String} msg 
+ * @returns {Function}
+ */
+function getTwentyOnePointCommand(msg) {
+  switch (msg) {
+    case '拿牌':
+      return getCardRound()
+    case '封牌':
+      return stopGetCard()
+  }
+}
+
+/**
+ * 获取随机数
+ * @param {Number} limit 随机数最大值
+ * @returns {Number}
+ */
+function getPureRandomNumber(limit) {
+  return Math.floor(Math.random() * limit)
+}
+
+/**
+ * 拿牌
+ * @param {String} character 拿牌者 
+ * @returns {Void}
+ */
+function getCard(character) {
+  let cardIndex = getPureRandomNumber(CACHE_MEMBER.get(character).HEAP.length)
+  try {
+    CACHE_MEMBER.get(character).CURRENT.push(CACHE_MEMBER.get(character).HEAP[cardIndex])
+  } catch (error) {
+    CACHE_MEMBER.get(character).CURRENT = CACHE_MEMBER.get(character).HEAP[cardIndex]
+  }
+  CACHE_MEMBER.get(character).HEAP.splice(cardIndex, 1)
+}
+
+// 拿牌回合
+function getCardRound() {
+  for(let character of CACHE_MEMBER.keys()) {
+    getCard(character)
+  }
+}
+
+// 计算最后的结果
+async function calculate() {
+  // calc-array.clone() extra-计算A count-点数合计
+  for (let member of CACHE_MEMBER.values()) {
+    let calc = [...member.CURRENT]
+    if (member.CURRENT.includes('A')) {
+      calc.splice(member.CURRENT.findIndex(item => item === 'A'), 1)
+      member.EXTRA = 1
+    }
+
+    // 计算点数 JQK 为10点
+    member.COUNT = calc.reduce((prev, next) => {
+      const nextNumber = Number(next)
+      const trans = Number.isNaN(nextNumber) ? 10 : nextNumber
+      return prev + trans
+    }, 0)
+
+    if (member.COUNT + member.EXTRA > 21) member.OUT = true
+  }
+}
+
+async function comparePoint() {
+  const validMember = [...CACHE_MEMBER.entries()].filter(member => !member[1].OUT)
+  if (validMember.length === 1 && validMember[0][0] === global['ContactSelf'].name()) return gameStop(getRandomReplyMsg(DICT.GAME_FAIL_TEXT))
+  else return gameStop(getRandomReplyMsg(DICT.GAME_SUCCESS_TEXT))
+}
+
+// 拿牌结果
+function getCardResultText() {
+  let res = ''
+  for (let [character, value] of CACHE_MEMBER.entries()) {
+    res += `${character} 拿到的牌： ${value.CURRENT} \n`
+  }
+
+  return res
+}
+
+/**
+ * 21点
+ * @param {String} msg 
+ * @return {Void}
+ */
+async function twentyOnePoint(msg) {
+  if (CACHE_STATUS) {
+    getTwentyOnePointCommand(msg)
+
+    await replyMessage(getCardResultText())
+    await calculate()
+    await comparePoint()
+    
+
+
+  } else {
+    CACHE_NAME = '21点'
+    CACHE_STATUS = true
+    CACHE_MEMBER.set(CACHE_CURRENT_CONTACT, {
+      HEAP: CACHE_HEAP,
+      CURRENT: [],
+      COUNT: 0,
+      EXTRA: 0,
+      OUT: false
+    })
+
+    CACHE_MEMBER.set(global['ContactSelf'].name(), {
+      HEAP: CACHE_HEAP,
+      CURRENT: [],
+      COUNT: 0,
+      EXTRA: 0,
+      OUT: false
+    })
+  
+    await replyMessage('game start!')
+    getCardRound()
+    getCardRound()
+
+    replyMessage(getCardResultText()) 
+  }
 }
 
 /**
@@ -105,8 +253,9 @@ function guess(num) {
  * @return {Void}
  */
 async function replyMessage(msg) {
-  await delay(200);
+  await delay(500);
   try {
+    
     await global['Message'].say(msg);
 
     const content = `{${global['Message'].to().name()}} ${msg}`
@@ -138,11 +287,16 @@ async function renameBot(name) {
   }
 }
 
-// 停止指令游戏
-function gameStop() {
+/**
+ * 结束游戏
+ * @param {String} stopMsg 
+ */
+async function gameStop(stopMsg = 'game over!') {
   CACHE_NUMBER = 0
   CACHE_STATUS = false
-  replyMessage('game over!')
+  CACHE_NAME = ''
+  CACHE_MEMBER.clear()
+  await replyMessage(stopMsg)
 }
 
 module.exports = {
