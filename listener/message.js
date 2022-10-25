@@ -10,7 +10,7 @@ const { FileBox } = require("file-box");
 // const superagent = require("../superagent");
 // const config = require("../config");
 const insertLog = require('../utils/log')
-const { handleMessage } = require('../action/message/index')
+const { handleMessage } = require('../action/message')
 
 const allKeywords = `你好！`;
 

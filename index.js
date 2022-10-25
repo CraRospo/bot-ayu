@@ -22,6 +22,7 @@ bot.on("login", async user => {
   onLogin(user, bot);
 });
 bot.on("message", async msg => {
+  if (msg.self()) return 
   global['Message'] = msg
   onMessage(msg, bot);
 });

@@ -1,4 +1,5 @@
 const { MASTER } = require('../config')
+const insertLog = require('./log')
 
 /**
  * 延迟
@@ -35,9 +36,42 @@ function getRandomReplyMsg(dictCollection) {
   return dictCollection[Math.floor(Math.random() * dictCollection.length)]
 }
 
+/**
+ * 获取随机数
+ * @param {Number} limit 随机数最大值
+ * @returns {Number}
+ */
+function getPureRandomNumber(limit) {
+  return Math.floor(Math.random() * limit)
+}
+
+/**
+ * 发送消息
+ * @param {String} msg
+ * @return {Void}
+ */
+async function replyMessage(msg) {
+  await delay(300);
+  try {
+    
+    await global['Message'].say(msg);
+
+    const content = `{${global['Message'].to().name()}} ${msg}`
+    insertLog({ action: 'SEND', content })
+  } catch (error) {
+    insertLog({
+      type: 'err',
+      action: 'RENAME',
+      content: error
+    })
+  }
+}
+
 module.exports = {
   delay,
   hasPermission,
   isCommand,
-  getRandomReplyMsg
+  getRandomReplyMsg,
+  replyMessage,
+  getPureRandomNumber
 }
