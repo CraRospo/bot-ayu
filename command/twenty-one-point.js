@@ -112,13 +112,13 @@ function comparePoint() {
   console.log(CACHE_MEMBER)
   const validMember = [...CACHE_MEMBER.entries()].filter(member => !member[1].OUT)
   if (validMember.length === 1) {
-    let result = 0
+    let type = 0
     if (validMember[0][0] === global['ContactSelf'].name()) {
-      result = -1
+      type = -1
       replyMessage(getRandomReplyMsg(DICT.GAME_FAIL_TEXT))
 
     } else {
-      result = 1
+      type = 1
       replyMessage(getRandomReplyMsg(DICT.GAME_SUCCESS_TEXT))
     }
 
@@ -126,8 +126,8 @@ function comparePoint() {
     delay(200)
     settleAccount({
       nickName: CACHE_CURRENT_CONTACT,
-      settleType: result,
-      bet: CACHE_BET_MONEY
+      type,
+      count: CACHE_BET_MONEY
     })
       .then(res => {
         console.log('结算' + res)

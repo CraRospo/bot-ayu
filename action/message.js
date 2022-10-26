@@ -1,4 +1,3 @@
-const { getMethod } = require('../utils/request')
 const { HELLO_MSG, BYE_MSG } = require('../config/index')
 const DICT = require('../dict')
 const insertLog = require('../utils/log')
@@ -11,7 +10,7 @@ const {
   replyMessage,
   delay
 } = require('../utils/utils')
-const { getAccount } = require('../api/message-command')
+const { getAccount, getReward } = require('../api/message-command')
 
 let CACHE_CURRENT_CONTACT = ''
     CACHE_STATUS = false,
@@ -86,6 +85,8 @@ function getCommandType(name, value) {
       return twentyOnePoint(value)
     case '账户':
       return getAccountInfo(CACHE_CURRENT_CONTACT)
+    case '低保':
+      return getRewardAction(CACHE_CURRENT_CONTACT)
     case '结束':
       return gameStop()
     default:
@@ -122,6 +123,26 @@ function twentyOnePoint(msg) {
     CACHE_NAME = '21点'
     CACHE_STATUS = true
     initTwentyOnePoint(msg)
+  }
+}
+
+/**
+ * 领取低保
+ * @param {String} name 
+ * @returns {Void}
+ */
+async function getRewardAction(name) {
+  const { data } = await getReward(name)
+  switch (data.code) {
+    case -1:
+      replyMessage(getRandomReplyMsg(DICT.REWARD_MSG.NOT_GET))
+      break;
+    case 0:
+      replyMessage(getRandomReplyMsg(DICT.REWARD_MSG.CAN_GET))
+      break;
+    case 1:
+      replyMessage(getRandomReplyMsg(DICT.REWARD_MSG.HAS_GET))
+      break;
   }
 }
 
