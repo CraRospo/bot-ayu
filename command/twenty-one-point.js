@@ -18,12 +18,14 @@ let CACHE_HEAP = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', '
  */
 function init(bet) {
   CACHE_CURRENT_CONTACT = global['Message'].talker().name()
+  console.log(CACHE_CURRENT_CONTACT)
   CACHE_BET_MONEY = Number(bet) || 50
   CACHE_MEMBER.set(CACHE_CURRENT_CONTACT, {
     HEAP: CACHE_HEAP,
     CURRENT: [],
     COUNT: 0,
     EXTRA: 0,
+    STOP: false,
     OUT: false
   })
 
@@ -32,6 +34,7 @@ function init(bet) {
     CURRENT: [],
     COUNT: 0,
     EXTRA: 0,
+    STOP: false,
     OUT: false
   })
 
@@ -64,6 +67,12 @@ function getTwentyOnePointCommand(msg) {
   }
 }
 
+// 封牌
+function stopGetCard() {
+  CACHE_MEMBER.get(CACHE_CURRENT_CONTACT).STOP = true
+  getCardRound()
+}
+
 /**
  * 拿牌
  * @param {String} character 拿牌者 
@@ -82,7 +91,7 @@ function getCard(character) {
 // 拿牌回合
 function getCardRound() {
   for(let character of CACHE_MEMBER.keys()) {
-    getCard(character)
+    if (!character.STOP) getCard(character)
   }
 }
 
