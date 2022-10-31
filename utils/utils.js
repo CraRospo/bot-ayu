@@ -1,4 +1,5 @@
 const { MASTER } = require('../config')
+const { randomInt } = require('node:crypto')
 const insertLog = require('./log')
 
 /**
@@ -42,7 +43,7 @@ function getRandomReplyMsg(dictCollection) {
  * @returns {Number}
  */
 function getPureRandomNumber(limit) {
-  return Math.floor(Math.random() * limit)
+  return randomInt(limit)
 }
 
 /**

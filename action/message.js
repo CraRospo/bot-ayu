@@ -151,8 +151,8 @@ async function getRewardAction(name) {
  * @param {String} nickName account-name
  */
 function getAccountInfo(nickName) {
-  console.log(nickName)
-  getAccount(nickName)
+  const nickNameURI = encodeURI(nickName)
+  getAccount(nickNameURI)
     .then(response => {
       const res = response.data
       replyMessage(`账户：${res.nickName}\n余额：${res.balance}`)

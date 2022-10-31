@@ -18,10 +18,9 @@ let CACHE_HEAP = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', '
  */
 function init(bet) {
   CACHE_CURRENT_CONTACT = global['Message'].talker().name()
-  console.log(CACHE_CURRENT_CONTACT)
   CACHE_BET_MONEY = Number(bet) || 50
   CACHE_MEMBER.set(CACHE_CURRENT_CONTACT, {
-    HEAP: CACHE_HEAP,
+    HEAP: [...CACHE_HEAP],
     CURRENT: [],
     COUNT: 0,
     EXTRA: 0,
@@ -30,7 +29,7 @@ function init(bet) {
   })
 
   CACHE_MEMBER.set(global['ContactSelf'].name(), {
-    HEAP: CACHE_HEAP,
+    HEAP: [...CACHE_HEAP],
     CURRENT: [],
     COUNT: 0,
     EXTRA: 0,
@@ -50,7 +49,7 @@ function dispatchCard(msg) {
   getTwentyOnePointCommand(msg)
   replyMessage(getCardResultText())
   calculate()
-  comparePoint()
+  return comparePoint()
 }
 
 /**
@@ -90,8 +89,10 @@ function getCard(character) {
 
 // 拿牌回合
 function getCardRound() {
-  for(let character of CACHE_MEMBER.keys()) {
-    if (!character.STOP) getCard(character)
+  for(let [character, value] of CACHE_MEMBER.entries()) {
+    if (!value.STOP) {
+      getCard(character)
+    }
   }
 }
 
@@ -118,7 +119,6 @@ function calculate() {
 
 // 比较胜负
 function comparePoint() {
-  console.log(CACHE_MEMBER)
   const validMember = [...CACHE_MEMBER.entries()].filter(member => !member[1].OUT)
   if (validMember.length === 1) {
     let type = 0
@@ -139,7 +139,9 @@ function comparePoint() {
       count: CACHE_BET_MONEY
     })
       .then(res => {
-        console.log('结算' + res)
+        if (res.data.code === 0) {
+          replyMessage(`您${type > 0 ? '赢得' : '输掉' }了赌注${CACHE_BET_MONEY}币`)
+        }
       })
     return true
   } 
