@@ -3,7 +3,11 @@ const DICT = require('../dict')
 
 let CACHE_NUMBER = 0
 
-// 初始化猜数字
+/**
+ * 初始化
+ * @param {Number|String} msg 
+ * @returns {Void}
+ */
 function init(msg) {
   const limit = msg || 100
   const num = Math.ceil(Math.random() * limit)
@@ -14,7 +18,7 @@ function init(msg) {
 /**
  * 比较number
  * @param {String} num 
- * @returns {String} 比较结果
+ * @returns {Boolean} 中断 
  */
 function guess(num) {
   const number = Number(num)

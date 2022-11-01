@@ -8,7 +8,7 @@ const { settleAccount } = require('../api/message-command')
 const DICT = require('../dict/index')
 
 let CACHE_HEAP = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'],
-    CACHE_MEMBER = new Map()
+    CACHE_MEMBER = new Map(),
     CACHE_BET_MONEY = 0,
     CACHE_CURRENT_CONTACT = ''
 
@@ -38,23 +38,29 @@ function init(bet) {
   })
 
   replyMessage('game start!')
+
+  // 初始拿两张牌
   getCardRound()
   getCardRound()
   delay(200)
   replyMessage(getCardResultText()) 
 }
 
-// 发牌
-function dispatchCard(msg) {
-  getTwentyOnePointCommand(msg)
-  replyMessage(getCardResultText())
-  calculate()
-  return comparePoint()
+/**
+ * 流程main
+ * @param {String} msg 指令
+ * @returns {Function} 
+ */
+ function dispatchCard(msg) {
+  getTwentyOnePointCommand(msg) // 指令解析 - 拿牌/封牌
+  replyMessage(getCardResultText()) // 返回拿牌结果和信息
+  calculate() // 计算点数
+  return comparePoint() // 计较结果
 }
 
 /**
  * 21点内的 指令解析
- * @param {String} msg 
+ * @param {String} msg 指令
  * @returns {Function}
  */
 function getTwentyOnePointCommand(msg) {
@@ -68,26 +74,32 @@ function getTwentyOnePointCommand(msg) {
 
 // 封牌
 function stopGetCard() {
+  // 修改用户拿牌状态
   CACHE_MEMBER.get(CACHE_CURRENT_CONTACT).STOP = true
   getCardRound()
 }
 
 /**
- * 拿牌
+ * 拿牌逻辑
  * @param {String} character 拿牌者 
  * @returns {Void}
  */
 function getCard(character) {
+  // 随机获取一张index
   let cardIndex = getPureRandomNumber(CACHE_MEMBER.get(character).HEAP.length)
+
+  // 从牌堆放入手牌
   try {
     CACHE_MEMBER.get(character).CURRENT.push(CACHE_MEMBER.get(character).HEAP[cardIndex])
   } catch (error) {
     CACHE_MEMBER.get(character).CURRENT = CACHE_MEMBER.get(character).HEAP[cardIndex]
   }
+
+  // 从牌堆移除
   CACHE_MEMBER.get(character).HEAP.splice(cardIndex, 1)
 }
 
-// 拿牌回合
+// 根据游戏人数分发卡牌
 function getCardRound() {
   for(let [character, value] of CACHE_MEMBER.entries()) {
     if (!value.STOP) {
@@ -119,20 +131,28 @@ function calculate() {
 
 // 比较胜负
 function comparePoint() {
+
+  // 计算没有爆点的人数
   const validMember = [...CACHE_MEMBER.entries()].filter(member => !member[1].OUT)
+
+  // 如果仅有一人没有爆点
   if (validMember.length === 1) {
-    let type = 0
+    let type = 0 // 结算类型 0-未结算 1 结算为赢 -1 结算为输
+
+    // 判断胜者
     if (validMember[0][0] === global['ContactSelf'].name()) {
       type = -1
       replyMessage(getRandomReplyMsg(DICT.GAME_FAIL_TEXT))
-
     } else {
       type = 1
       replyMessage(getRandomReplyMsg(DICT.GAME_SUCCESS_TEXT))
     }
 
+    // 清除缓存
     CACHE_MEMBER.clear()
     delay(200)
+
+    // 发送结算请求
     settleAccount({
       nickName: CACHE_CURRENT_CONTACT,
       type,
@@ -143,12 +163,15 @@ function comparePoint() {
           replyMessage(`您${type > 0 ? '赢得' : '输掉' }了赌注${CACHE_BET_MONEY}币`)
         }
       })
+      .catch(err => {
+        replyMessage('结算异常！')
+      })
     return true
   } 
   
 }
 
-// 拿牌结果
+// 生成拿牌结果文字
 function getCardResultText() {
   let res = ''
   for (let [character, value] of CACHE_MEMBER.entries()) {

@@ -160,7 +160,7 @@ function getAccountInfo(nickName) {
 }
 
 /**
- * 重命名
+ * 重命名（不支持）
  * @param {String} name 
  * @return {Void}
  */
