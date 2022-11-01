@@ -24,7 +24,7 @@ function init(bet) {
     CURRENT: [],
     COUNT: 0,
     EXTRA: 0,
-    STOP: false,
+    FREEZE: false,
     OUT: false
   })
 
@@ -33,7 +33,7 @@ function init(bet) {
     CURRENT: [],
     COUNT: 0,
     EXTRA: 0,
-    STOP: false,
+    FREEZE: false,
     OUT: false
   })
 
@@ -43,7 +43,10 @@ function init(bet) {
   getCardRound()
   getCardRound()
   delay(200)
-  replyMessage(getCardResultText()) 
+  replyMessage(getCardResultText())
+  calculate() // 计算点数
+  delay(300)
+  comparePoint() // 计较结果
 }
 
 /**
@@ -55,6 +58,7 @@ function init(bet) {
   getTwentyOnePointCommand(msg) // 指令解析 - 拿牌/封牌
   replyMessage(getCardResultText()) // 返回拿牌结果和信息
   calculate() // 计算点数
+  delay(300)
   return comparePoint() // 计较结果
 }
 
@@ -75,8 +79,19 @@ function getTwentyOnePointCommand(msg) {
 // 封牌
 function stopGetCard() {
   // 修改用户拿牌状态
-  CACHE_MEMBER.get(CACHE_CURRENT_CONTACT).STOP = true
+  CACHE_MEMBER.get(CACHE_CURRENT_CONTACT).FREEZE = true
   getCardRound()
+}
+
+// bot 的决断！
+function judgement() {
+  const point = CACHE_MEMBER.get(global['ContactSelf'].name()).COUNT
+  const playerPoint = CACHE_MEMBER.get(CACHE_CURRENT_CONTACT).COUNT
+
+  if (point > playerPoint && point > 16) {
+    CACHE_MEMBER.get(global['ContactSelf'].name()).FREEZE = true
+    console.log('封牌')
+  }
 }
 
 /**
@@ -101,8 +116,11 @@ function getCard(character) {
 
 // 根据游戏人数分发卡牌
 function getCardRound() {
+  judgement()
+  if (CACHE_MEMBER.get(global['ContactSelf'].name()).FREEZE) replyMessage(`${global['ContactSelf'].name()}封牌`)
+  delay(300)
   for(let [character, value] of CACHE_MEMBER.entries()) {
-    if (!value.STOP) {
+    if (!value.FREEZE) {
       getCard(character)
     }
   }
@@ -125,7 +143,17 @@ function calculate() {
       return prev + trans
     }, 0)
 
-    if (member.COUNT + member.EXTRA > 21) member.OUT = true
+    console.log(member)
+
+    if (member.EXTRA) {
+      if(member.COUNT + 11 > 21 ) {
+        member.COUNT = member.COUNT + 1
+      } else {
+        member.COUNT = member.COUNT + 11
+      }
+    }
+
+    if(member.COUNT > 21) member.OUT = true
   }
 }
 
@@ -134,13 +162,21 @@ function comparePoint() {
 
   // 计算没有爆点的人数
   const validMember = [...CACHE_MEMBER.entries()].filter(member => !member[1].OUT)
+  const self = CACHE_MEMBER.get(global['ContactSelf'].name())
+  const contact = CACHE_MEMBER.get(CACHE_CURRENT_CONTACT)
+  let type = 0 // 结算类型 0 平局 1 结算为赢 -1 结算为输
 
-  // 如果仅有一人没有爆点
+  if (self.EXTRA && contact.EXTRA) {
+
+    replyMessage('平局，此局无效！')
+    return true
+  }
+
+  // 如果有人爆点
   if (validMember.length === 1) {
-    let type = 0 // 结算类型 0-未结算 1 结算为赢 -1 结算为输
 
     // 判断胜者
-    if (validMember[0][0] === global['ContactSelf'].name()) {
+    if (validMember[0][0] != CACHE_CURRENT_CONTACT) {
       type = -1
       replyMessage(getRandomReplyMsg(DICT.GAME_FAIL_TEXT))
     } else {
@@ -148,6 +184,19 @@ function comparePoint() {
       replyMessage(getRandomReplyMsg(DICT.GAME_SUCCESS_TEXT))
     }
 
+  } else if (validMember.length > 1) {
+    if (self.COUNT > contact.COUNT && contact.FREEZE) {
+      type = -1
+    } else if (self.COUNT < contact.COUNT && self.FREEZE) {
+      type = 1
+    }
+  } else {
+    type = -1
+  }
+
+  // replyMessage(getRandomReplyMsg(DICT.GAME_FAIL_TEXT))
+
+  if (type) {
     // 清除缓存
     CACHE_MEMBER.clear()
     delay(200)
@@ -166,9 +215,9 @@ function comparePoint() {
       .catch(err => {
         replyMessage('结算异常！')
       })
+    
     return true
-  } 
-  
+  }
 }
 
 // 生成拿牌结果文字
