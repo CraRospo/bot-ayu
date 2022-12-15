@@ -5,11 +5,9 @@
  * @Last Modified by: Peanut
  * @Last Modified time: 2021-04-19 22:07:28
  */
-// const schedule = require("../schedule");
-// const config = require("../config");
-// const untils = require("../utils");
-// const superagent = require("../superagent");
-const insertLog = require('../utils/log');
+const schedule = require("node-schedule")
+const config = require("../config")
+const insertLog = require('../utils/log')
 /**
  * @description 您的机器人上线啦
  * @param {} user
@@ -17,25 +15,22 @@ const insertLog = require('../utils/log');
 async function onLogin(user, bot) {
   console.log(`贴心小助理${user}登录了`);
   insertLog({ action: 'Login', content: user })
+  sendTips(bot)
 }
 /**
  * 9点定时给指定群发送消息
  */
-// async function onRoom(bot) {
-//   //匹配规则可参考 schedule/index.js
-//   const time = "0 0 9 * * *";
-//   schedule.setSchedule(time, async () => {
-//     const room = await bot.Room.find({
-//       topic: config.WEBROOM
-//     });
-//     let today = await untils.formatDate(new Date()); //获取今天的日期
-//     let one = await superagent.getOne(); //获取每日一句
-//     const englishData = await superagent.getEnglishOne(); //英语一句话
-//     let english = `en：${englishData.en}\nzh：${englishData.zh}`;
-//     let poison = await superagent.getPoison(); //毒鸡汤
-//     const str = `${today}\n元气满满的一天开始啦,要加油噢^_^\n\n每日一句：\n${one}\n\n英语一句话：\n${english}\n\n毒鸡汤：\n${poison}`;
-//     await room.say(str);
-//   });
-// }
+async function sendTips(bot) {
+  //匹配规则可参考 schedule/index.js
+  const time = "00 00 * * * *";
+  schedule.scheduleJob(time, async () => {
+    const room = await bot.Room.find({
+      topic: config.WEBROOM
+    });
+
+    const str = `我是提醒喝水小助手。\n 工作辛苦啦，现在请你站起身来，去喝一杯水。\n 保持走动，有益健康哟。\n 我会每个小时都来提醒大家的！`
+    await room.say(str);
+  });
+}
 
 module.exports = onLogin

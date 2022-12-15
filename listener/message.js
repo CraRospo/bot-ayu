@@ -12,8 +12,6 @@ const { FileBox } = require("file-box");
 const insertLog = require('../utils/log')
 const { handleMessage } = require('../action/message')
 
-const allKeywords = `你好！`;
-
 /**
  * 处理消息
  */
@@ -32,6 +30,25 @@ async function onMessage(msg, bot, contactSelf) {
     }
   }
 }
+
+/**
+ * 处理群消息
+ * @param {*} msg 
+ */
+async function onWebRoomMessage(msg) {
+  if (await msg.mentionSelf()) {
+    const contact = msg.talker().name()
+    const message = msg.text().trim()
+    const msgArr = message.split(' ')
+    msgArr.shift()
+    const msgText = msgArr.join('')
+
+    let content = `<${contact}> ${msgText}`
+    insertLog({ action: 'RoomMessage', content })
+    handleMessage(msgText, contact)
+  }
+}
+
 /**
  * 处理用户消息
  */
